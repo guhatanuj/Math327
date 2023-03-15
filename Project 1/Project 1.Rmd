@@ -1,9 +1,12 @@
 ---
-title: "Project 1"
+title: "Equity and ACT in Colleges"
 author: "Tanuj Guha"
 date: "2023-03-07"
 output: word_document
 ---
+
+_Abstract_: In this project we are going to investigate the relationship between ACT scores, and several other factors that affect an individual's college admissions. The intention of this project is to estimate how much of the ACT scores of admitted students can be explained by other factors such as English Proficiency, Tutoring, High School GPA, among other things. 
+
 
 ```{r setup, warning = FALSE, message = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -33,7 +36,7 @@ colleges <- colleges %>%
         rename("ID" = "Unique identification number of the institution",
                "ACT" = "ACT Composite 75th percentile score",
                "GPA" = "Secondary school GPA",
-               "CollegePrep" = "Completion of college-preparatory program"
+               "CollegePrep" = "Completion of college-preparatory program",
                "TOEFL" = "TOEFL (Test of English as a Foreign Language",
                "NumberEnrolled" = "Enrolled total",
                "ACTPercentage" = "Percent of first-time degree/certificate-seeking students submitting ACT scores",
@@ -41,19 +44,12 @@ colleges <- colleges %>%
               "SATM"= "SAT Math 75th percentile score")
 
 colleges = drop_na(colleges)
-write.xlsx(data, file = "Colleges.xlsx", sheetName="Colleges")
+write.xlsx(colleges, file = "Colleges.xlsx", sheetName="Colleges")
 
 ```
 This marks the end of house keeping data cleaning. 
  
  
 ```{r}
-library(tidyverse)
-library(readxl)
-library(xlsx)
-library(datadictionary)
 colleges = read_xlsx("colleges.xlsx")
-
-
 ```
-

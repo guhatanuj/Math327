@@ -2,19 +2,20 @@
 title: "Equity and ACT in Colleges"
 author: "Tanuj Guha"
 date: "2023-03-07"
-output: word_document
+output:
+  word_document: default
+  html_document:
+    df_print: paged
 ---
 
 _Abstract_: In this project we are going to investigate the relationship between ACT scores, and several other factors that affect an individual's college admissions. The intention of this project is to estimate how much of the ACT scores of admitted students can be explained by other factors such as English Proficiency, Tutoring, High School GPA, among other things. 
 
 Let us dive right into the project, and begin by importing the dataset.
 
+Getting the data (appending legible names to dataset from dictionary)
+
 ```{r setup, warning = FALSE, message = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-Getting the data (appending legible names to dataset from dictionary)
-```{r}
 library(tidyverse)
 library(readxl)
 library(xlsx)
@@ -91,6 +92,37 @@ hist(colleges$NumberEnrolled)
 Yikes! I was going to do a Shapiro-Wilk test, but I think given the visual evidence, that would be a moot point. So, let us go right to the log-transformation. 
 
 ```{r}
+colleges$logEnrolled <- (log(colleges$NumberEnrolled))
+hist(colleges$logEnrolled)
+```
 
+For our purposes, it (the log trnasformation) works!
+Let us now create a scatterplot matrix. 
+
+```{r}
+numerical = cbind(ACT = colleges$ACT, logEnrolled = colleges$logEnrolled, ACTPercentage = colleges$ACTPercentage, SATM = colleges$SATM, SATWR = colleges$SATWR)
+pairs(numerical)
+```
+
+Visually, there seems to be a pretty strong corrleation between (75th percentile) ACT and SAT scores (dis aggregated by subjects). There also seems to be a relationship between 75th percentile ACT scores, and the percentage of students who choose to submit their ACT scores.
+
+Of the predictor variables in the _colleges_ dataset, we feel GPA and TOEFL should have been numerical. In the current case they are binned variables, describing the qualitative attributes _about_ the test takes, over the actual representation of scores themselves. We also feel CollegePrep should have been binary. 
+
+_Results_: Let us do a simple linear regression. Let us predict the 75th Percentile of ACT scores, for a given cohort, by looking at what percentage of that cohort decide to submit scores.
+
+
+```{r}
+model1 = lm(colleges$ACT ~ colleges$ACTPercentage )
+summary(model1)
+```
+```{r}
+plot(colleges$ACTPercentage, colleges$ACT)
+abline(model1, col = "red")    
+```
+
+Given that 0.00000004097 is < 0.05. The linear model is significant in it's relationship. However, the relationship is __inverted__ from what we had initially expected. We had expected that, for a given cohort, more people would choose to submit their scores, if their ACT scores were higher. However, the model shows that _infact the opposite is true_: if a greater percetnage of people choose to submit their ACT scores, then their 75th percentile ACT scores are lower! 
+
+```{r}
+plot(model1)
 ```
 

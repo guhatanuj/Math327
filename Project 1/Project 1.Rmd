@@ -7,6 +7,7 @@ output: word_document
 
 _Abstract_: In this project we are going to investigate the relationship between ACT scores, and several other factors that affect an individual's college admissions. The intention of this project is to estimate how much of the ACT scores of admitted students can be explained by other factors such as English Proficiency, Tutoring, High School GPA, among other things. 
 
+Let us dive right into the project, and begin by importing the dataset.
 
 ```{r setup, warning = FALSE, message = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -45,11 +46,51 @@ colleges <- colleges %>%
 
 colleges = drop_na(colleges)
 write.xlsx(colleges, file = "Colleges.xlsx", sheetName="Colleges")
-
 ```
+
 This marks the end of house keeping data cleaning. 
- 
  
 ```{r}
 colleges = read_xlsx("colleges.xlsx")
 ```
+
+_Introduction_: 
+Conceptually speak, the ACT, or any other standardized Test for that matter, is touted as an indicator of a person's mastery of high school matter. This mastery is supposed to be a prerequisite for college coursework to further build upon. However, indicators are can often be misleading, and for an indicator to be robust, it has to be concise while being the _least_ reductive.
+
+
+Specifically, in this project, we are investigating the validity of ACT scores, and looking into factors that might contribute towards a higher score for a cohort of students. These cohorts are broken down in terms freshmen who enrolled in the same college.We expect the ACT scores to follow a normal distribution. WE also recognize that we haven't _exhaustively_ identified all of the factors that determine the ACT scores, hence we expect the residuals to have a normal distribution, when plotted against predicted values. 
+
+_Data Collection_: 
+
+This dataset has 7 predictor variables:
+	__ Secondary school GPA (quant)
+	__ Completion of college-preparatory program (category)
+	__ TOEFL (Test of English as a Foreign Language (categorical)
+	__ Enrolled total (quant)
+	__ Percent of first-time degree/certificate-seeking students submitting ACT scores (quant)
+	__ SAT Evidence-Based Reading and Writing 75th percentile score) (quant)
+	__ SAT Math 75th percentile score (quant)
+
+Each of these predictor variables explain, in some part, the 75th Percentile ACT scores of incoming students in a given college. For the sake of privacy, the colleges have been anonymized and are represented by proxies under column 'ID'.
+
+Let us look at the distribution of each of the quantitative variables in this dataset. 
+
+```{r}
+numerical = cbind(colleges$ACT, colleges$NumberEnrolled, colleges$ACTPercentage, colleges$SATM, colleges$SATWR)
+barplot(scale(numerical), beside=T)
+```
+
+Some might accuse our approach as one that isn't assiduous, but I'd beg to disagree. The above graph visually indicated shows that, the only variable that needs transformation would be the 'NumberEnrolled' column. To arrive at the conclusion, we first created a dataset of all the numerical columns of from the colleges dataset. Then, we scaled the columns (scaling a column does not change its skewness). We chose to scale the columns because that way _all_ of the columns can be represented in the same bar graph. Then, we plotted all of the columns side by side in a bar plot. We chose a singular bar plot for brevity's sake, and in our judgement, it was _enough_ to indicate only those columns, where the skew was painfully obvious. 
+
+Now let us investigate 'NumberEnrolled' in greater detail. 
+
+```{r}
+hist(colleges$NumberEnrolled)
+```
+
+Yikes! I was going to do a Shapiro-Wilk test, but I think given the visual evidence, that would be a moot point. So, let us go right to the log-transformation. 
+
+```{r}
+
+```
+

@@ -1,0 +1,52 @@
+---
+title: "RStudio HW"
+author: "Rick Guha"
+date: "February 24, 2023"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Read in the data
+
+First, we will load the data.
+
+```{r}
+# Activate the Stat2Data package (must be installed first - one-time step)
+library (Stat2Data)
+
+# load the Day1Survey data set
+data (Day1Survey)
+
+head (Day1Survey)
+```
+
+Then make a plot.
+
+```{r}
+# Three different ways to do the same thing
+boxplot (Height ~ Sex, data=Day1Survey)
+```
+
+The plot above suggests that there is some difference between the groups.
+
+Here are the summary statistics by group:
+
+```{r, warning=FALSE, message=FALSE}
+library (mosaic)
+favstats(Height ~ Sex, data=Day1Survey)
+```
+
+Let's do a two sample t-test to determine if there is actually a statistically significant difference between the heights of men and women:
+
+```{r}
+t.test (Height ~ Sex, data=Day1Survey, var.equal=T)
+```
+The p-value is 9.092e-10, so we reject the null hypothesis and conclude that the mean mean height difference is statistically different between men and women.
+
+We are 95% confident that women, on average, are between -8.7 inches and -5.15 inches shorter than men.
+

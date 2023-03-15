@@ -1,0 +1,41 @@
+"0","# Need to install the mosaic package (one-time step)."
+"0","library (mosaic)"
+"2","Registered S3 method overwritten by 'mosaic':
+  method                           from   
+  fortify.SpatialPolygonsDataFrame ggplot2
+"
+"2","
+The 'mosaic' package masks several functions from core packages in order to add 
+additional features.  The original behavior of these functions should not be affected by this.
+"
+"2","
+Attaching package: ‘mosaic’
+
+"
+"2","The following objects are masked from ‘package:dplyr’:
+
+    count, do, tally
+
+"
+"2","The following object is masked from ‘package:Matrix’:
+
+    mean
+
+"
+"2","The following object is masked from ‘package:ggplot2’:
+
+    stat
+
+"
+"2","The following objects are masked from ‘package:stats’:
+
+    binom.test, cor, cor.test, cov, fivenum, IQR, median,
+    prop.test, quantile, sd, t.test, var
+
+"
+"2","The following objects are masked from ‘package:base’:
+
+    max, mean, min, prod, range, sample, sum
+
+"
+"0","favstats(Height ~ Sex, data=Day1Survey)"

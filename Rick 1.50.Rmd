@@ -1,0 +1,39 @@
+---
+title: "Ex 1.50"
+author: "Tanuj Guha"
+date: "2023-02-25"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Stat2Data)
+data("CountyHealth")
+head (CountyHealth)
+CountyHealth$LogMD = log(CountyHealth$MDs)
+```
+```{r}
+TestLM = lm (Hospitals ~ MDs, data=CountyHealth)
+summary (TestLM)
+```
+We know that the number of MDs without transformation don't provide a good enough linear model. Let us see what it looks like:
+
+```{r fig.width=7.5, fig.height=4}
+par (mfrow = c(1, 2))
+plot (TestLM, which=1:2)
+```
+
+Now let us create a model iwth the log transformed MDs, and check if the tranformation helped.
+
+```{r}
+TestLogLM = lm (Hospitals ~ LogMD, data=CountyHealth)
+par (mfrow = c(1, 2))
+plot (TestLogLM, which=1:2)
+```
+
+The log transformation is most certainly a better step: it decreases obvious outliers as indicated by the Q-Q plot meaning their distributions are now better matched. However, the Residuals/Fitted graph indicates the possibility of heteroskedasticity. 
+
+

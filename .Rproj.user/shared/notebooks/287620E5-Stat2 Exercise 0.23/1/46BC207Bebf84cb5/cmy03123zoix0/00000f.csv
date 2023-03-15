@@ -1,0 +1,7 @@
+"0","# Activate the Stat2Data package (must be installed first - one-time step)"
+"0","library (Stat2Data)"
+"0",""
+"0","# load the Day1Survey data set"
+"0","data (Day1Survey)"
+"0",""
+"0","head (Day1Survey)"

@@ -1,0 +1,2 @@
+"0","# Three different ways to do the same thing"
+"0","boxplot (Height ~ Sex, data=Day1Survey)"

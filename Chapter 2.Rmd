@@ -1,0 +1,34 @@
+---
+title: "Chapter 2"
+author: "Tanuj Guha"
+date: "2023-02-25"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Stat2Data)
+data("MetabolicRate")
+head (MetabolicRate)
+```
+Let us create a model as asked in 2.24:
+
+```{r}
+model = lm (LogBodySize ~ LogMrate, data=MetabolicRate)
+summary (model)
+```
+2.24 A) LogBodySize = -1.39 + 1.03 LogMrate
+2.24 B) The slope parameter is significant! Generally speaking, I'd calculate t-stat, then p-val of that t-stat from DF. However, R provides 'Signif Codes', and the summary of the model inidicates that the slope parameter is significant. 
+2.24 D) Model sum of squares is SSM and the Total sum of squares is SST. Since R^2 is SSM/SST, then the answer is 0.9478. The larger this value, the better the model explains the relationship between the Y and X variables. 
+
+2.50 A) When LogBodySize is 0 then LogMrate is (139/103). Got the LogMrate value by solving for 0 = -1.39 + 1.03 LogMrate. Then, Mrate = 22.36 μW
+2.50 B) Predicted interval = -1.38 (+/-) (-100.7*0.01381)
+The 95% PI will be (-2.781334, 0)
+
+[Confused about the 2.50 B answer, suspect it is incorrect: trying to understand the process from 2.4]
+

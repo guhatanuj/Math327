@@ -8,7 +8,7 @@ output:
     df_print: paged
 ---
 
-_Abstract_: In this project we are going to investigate the relationship between ACT scores, and several other factors that affect an individual's college admissions. The intention of this project is to estimate how much of the ACT scores of admitted students can be explained by other factors such as English Proficiency, Tutoring, High School GPA, among other things. 
+_ # Abstract #_: In this project we are going to investigate the relationship between ACT scores, and several other factors that affect an individual's college admissions. The intention of this project is to estimate how much of the ACT scores of admitted students can be explained by other factors such as English Proficiency, Tutoring, High School GPA, among other things. 
 
 Let us dive right into the project, and begin by importing the dataset.
 
@@ -55,13 +55,13 @@ This marks the end of house keeping data cleaning.
 colleges = read_xlsx("colleges.xlsx")
 ```
 
-_Introduction_: 
+_ # Introduction # _: 
 Conceptually speak, the ACT, or any other standardized Test for that matter, is touted as an indicator of a person's mastery of high school matter. This mastery is supposed to be a prerequisite for college coursework to further build upon. However, indicators are can often be misleading, and for an indicator to be robust, it has to be concise while being the _least_ reductive.
 
 
 Specifically, in this project, we are investigating the validity of ACT scores, and looking into factors that might contribute towards a higher score for a cohort of students. These cohorts are broken down in terms freshmen who enrolled in the same college.We expect the ACT scores to follow a normal distribution. WE also recognize that we haven't _exhaustively_ identified all of the factors that determine the ACT scores, hence we expect the residuals to have a normal distribution, when plotted against predicted values. 
 
-_Data Collection_: 
+_ # Data Collection # _: 
 
 This dataset has 7 predictor variables:
 	__ Secondary school GPA (quant)
@@ -108,11 +108,11 @@ Visually, there seems to be a pretty strong corrleation between (75th percentile
 
 Of the predictor variables in the _colleges_ dataset, we feel GPA and TOEFL should have been numerical. In the current case they are binned variables, describing the qualitative attributes _about_ the test takes, over the actual representation of scores themselves. We also feel CollegePrep should have been binary. 
 
-_Results_: Let us do a simple linear regression. Let us predict the 75th Percentile of ACT scores, for a given cohort, by looking at what percentage of that cohort decide to submit scores.
+_ # Results # _: Let us do a simple linear regression. Let us predict the 75th Percentile of ACT scores, for a given cohort, by looking at what percentage of that cohort decide to submit scores.
 
 
 ```{r}
-model1 = lm(colleges$ACT ~ colleges$ACTPercentage )
+model1 = lm(colleges$ACT ~ colleges$ACTPercentage)
 summary(model1)
 ```
 ```{r}
@@ -121,8 +121,40 @@ abline(model1, col = "red")
 ```
 
 Given that 0.00000004097 is < 0.05. The linear model is significant in it's relationship. However, the relationship is __inverted__ from what we had initially expected. We had expected that, for a given cohort, more people would choose to submit their scores, if their ACT scores were higher. However, the model shows that _infact the opposite is true_: if a greater percetnage of people choose to submit their ACT scores, then their 75th percentile ACT scores are lower! 
-
+  
 ```{r}
 plot(model1)
 ```
 
+Now, let use all the numerical variables as predictors.
+
+```{r}
+model2 = lm(colleges$ACT ~ colleges$logEnrolled + colleges$ACTPercentage + colleges$SATWR + colleges$SATM)
+summary(model2)
+```
+SAT Math and Writing/Reading were the most significant predictors in the model. They are also the most highly correlated with each other. 
+
+```{r}
+plot(model2)
+```
+
+The residual variance seems pretty constant. Since none of the estimators are insignificant, we are going to stick with keeping them in the model. 
+
+So far, in this first iteration, we have been pretty much focused on the predictor variables. We would now focus on the the dependent variable, the _75th ACT score_.
+
+```{r}
+hist(colleges$ACT)
+```
+
+There is a slight _right skew_. Given the roughly apparent normality of the __ACT__ variable. We will given the _kind of_ shaky normality plot, let us do a Box Cox transformation. 
+
+```{r, warning = FALSE, message = FALSE}
+library(MASS)
+bc = boxcox(model1)
+lambda = bc$x[which.max(bc$y)]
+model3 = lm(((colleges$ACT^lambda-1)/lambda) ~ colleges$ACTPercentage)
+plot(model3)
+```
+
+
+_ # Analysis # _: The Box Cox transformation definitely helped. The Q-Q plot has improved, and so has the residuals-levarage graph. Going forward we would like to investigate the interaction effect of different SAT Subjects in the 

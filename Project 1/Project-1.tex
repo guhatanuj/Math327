@@ -110,7 +110,7 @@
 \begin{document}
 \maketitle
 
-\emph{Abstract}: In this project we are going to investigate the
+\textbf{Abstract}: In this project we are going to investigate the
 relationship between ACT scores, and several other factors that affect
 an individual's college admissions. The intention of this project is to
 estimate how much of the ACT scores of admitted students can be
@@ -173,7 +173,7 @@ This marks the end of house keeping data cleaning.
 ## * `` -> `...1`
 \end{verbatim}
 
-\emph{Introduction}: Conceptually speak, the ACT, or any other
+\textbf{Introduction}: Conceptually speak, the ACT, or any other
 standardized Test for that matter, is touted as an indicator of a
 person's mastery of high school matter. This mastery is supposed to be a
 prerequisite for college coursework to further build upon. However,
@@ -189,7 +189,7 @@ follow a normal distribution. WE also recognize that we haven't
 scores, hence we expect the residuals to have a normal distribution,
 when plotted against predicted values.
 
-\emph{Data Collection}:
+\textbf{Data Collection}:
 
 This dataset has 7 predictor variables:  \_\_ Secondary school GPA
 (quant)  \_\_ Completion of college-preparatory program (category) 
@@ -251,6 +251,216 @@ log-transformation.
 
 \includegraphics{Project-1_files/figure-latex/unnamed-chunk-5-1.pdf}
 
-For our purposes, it (the log trnasformation) works!
+For our purposes, it (the log trnasformation) works! Let us now create a
+scatterplot matrix.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{numerical }\OtherTok{=} \FunctionTok{cbind}\NormalTok{(}\AttributeTok{ACT =}\NormalTok{ colleges}\SpecialCharTok{$}\NormalTok{ACT, }\AttributeTok{logEnrolled =}\NormalTok{ colleges}\SpecialCharTok{$}\NormalTok{logEnrolled, }\AttributeTok{ACTPercentage =}\NormalTok{ colleges}\SpecialCharTok{$}\NormalTok{ACTPercentage, }\AttributeTok{SATM =}\NormalTok{ colleges}\SpecialCharTok{$}\NormalTok{SATM, }\AttributeTok{SATWR =}\NormalTok{ colleges}\SpecialCharTok{$}\NormalTok{SATWR)}
+\FunctionTok{pairs}\NormalTok{(numerical)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-6-1.pdf}
+
+Visually, there seems to be a pretty strong corrleation between (75th
+percentile) ACT and SAT scores (dis aggregated by subjects). There also
+seems to be a relationship between 75th percentile ACT scores, and the
+percentage of students who choose to submit their ACT scores.
+
+Of the predictor variables in the \emph{colleges} dataset, we feel GPA
+and TOEFL should have been numerical. In the current case they are
+binned variables, describing the qualitative attributes \emph{about} the
+test takes, over the actual representation of scores themselves. We also
+feel CollegePrep should have been binary.
+
+\textbf{Results}: Let us do a simple linear regression. Let us predict
+the 75th Percentile of ACT scores, for a given cohort, by looking at
+what percentage of that cohort decide to submit scores.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{model1 }\OtherTok{=} \FunctionTok{lm}\NormalTok{(colleges}\SpecialCharTok{$}\NormalTok{ACT }\SpecialCharTok{\textasciitilde{}}\NormalTok{ colleges}\SpecialCharTok{$}\NormalTok{ACTPercentage)}
+\FunctionTok{summary}\NormalTok{(model1)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = colleges$ACT ~ colleges$ACTPercentage)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -12.7862  -2.7862  -0.0996   2.9831   8.8212 
+## 
+## Coefficients:
+##                         Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)            27.997450   0.195552 143.171  < 2e-16 ***
+## colleges$ACTPercentage -0.026408   0.004773  -5.533  4.1e-08 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 3.937 on 935 degrees of freedom
+## Multiple R-squared:  0.0317, Adjusted R-squared:  0.03066 
+## F-statistic: 30.61 on 1 and 935 DF,  p-value: 4.097e-08
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(colleges}\SpecialCharTok{$}\NormalTok{ACTPercentage, colleges}\SpecialCharTok{$}\NormalTok{ACT)}
+\FunctionTok{abline}\NormalTok{(model1, }\AttributeTok{col =} \StringTok{"red"}\NormalTok{)    }
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+Given that 0.00000004097 is \textless{} 0.05. The linear model is
+significant in it's relationship. However, the relationship is
+\textbf{inverted} from what we had initially expected. We had expected
+that, for a given cohort, more people would choose to submit their
+scores, if their ACT scores were higher. However, the model shows that
+\emph{infact the opposite is true}: if a greater percetnage of people
+choose to submit their ACT scores, then their 75th percentile ACT scores
+are lower!
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(model1)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-9-1.pdf}
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-9-2.pdf}
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-9-3.pdf}
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-9-4.pdf}
+
+Now, let use all the numerical variables as predictors.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{model2 }\OtherTok{=} \FunctionTok{lm}\NormalTok{(colleges}\SpecialCharTok{$}\NormalTok{ACT }\SpecialCharTok{\textasciitilde{}}\NormalTok{ colleges}\SpecialCharTok{$}\NormalTok{logEnrolled }\SpecialCharTok{+}\NormalTok{ colleges}\SpecialCharTok{$}\NormalTok{ACTPercentage }\SpecialCharTok{+}\NormalTok{ colleges}\SpecialCharTok{$}\NormalTok{SATWR }\SpecialCharTok{+}\NormalTok{ colleges}\SpecialCharTok{$}\NormalTok{SATM)}
+\FunctionTok{summary}\NormalTok{(model2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = colleges$ACT ~ colleges$logEnrolled + colleges$ACTPercentage + 
+##     colleges$SATWR + colleges$SATM)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -7.8494 -0.8432  0.0414  0.9611  7.1673 
+## 
+## Coefficients:
+##                         Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)            -6.915355   0.628696 -11.000  < 2e-16 ***
+## colleges$logEnrolled    0.155204   0.053253   2.914  0.00365 ** 
+## colleges$ACTPercentage -0.006243   0.002136  -2.923  0.00355 ** 
+## colleges$SATWR          0.027678   0.002353  11.762  < 2e-16 ***
+## colleges$SATM           0.025119   0.002045  12.285  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.726 on 932 degrees of freedom
+## Multiple R-squared:  0.8144, Adjusted R-squared:  0.8136 
+## F-statistic:  1022 on 4 and 932 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+SAT Math and Writing/Reading were the most significant predictors in the
+model. They are also the most highly correlated with each other.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(model2)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-11-1.pdf}
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-11-2.pdf}
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-11-3.pdf}
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-11-4.pdf}
+
+The residual variance seems pretty constant. Since none of the
+estimators are insignificant, we are going to stick with keeping them in
+the model.
+
+So far, in this first iteration, we have been pretty much focused on the
+predictor variables. We would now focus on the the dependent variable,
+the \emph{75th ACT score}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{hist}\NormalTok{(colleges}\SpecialCharTok{$}\NormalTok{ACT)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-12-1.pdf}
+
+There is a slight \emph{right skew}. Given the roughly apparent
+normality of the \textbf{ACT} variable. We will given the \emph{kind of}
+shaky normality plot, let us do a Box Cox transformation.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(MASS)}
+\NormalTok{bc }\OtherTok{=} \FunctionTok{boxcox}\NormalTok{(model1)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-13-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lambda }\OtherTok{=}\NormalTok{ bc}\SpecialCharTok{$}\NormalTok{x[}\FunctionTok{which.max}\NormalTok{(bc}\SpecialCharTok{$}\NormalTok{y)]}
+\NormalTok{model3 }\OtherTok{=} \FunctionTok{lm}\NormalTok{(((colleges}\SpecialCharTok{$}\NormalTok{ACT}\SpecialCharTok{\^{}}\NormalTok{lambda}\DecValTok{{-}1}\NormalTok{)}\SpecialCharTok{/}\NormalTok{lambda) }\SpecialCharTok{\textasciitilde{}}\NormalTok{ colleges}\SpecialCharTok{$}\NormalTok{ACTPercentage)}
+\FunctionTok{summary}\NormalTok{(model3)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = ((colleges$ACT^lambda - 1)/lambda) ~ colleges$ACTPercentage)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -8.5449 -1.7865 -0.0396  1.9503  5.6335 
+## 
+## Coefficients:
+##                         Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)            19.630261   0.126897 154.694  < 2e-16 ***
+## colleges$ACTPercentage -0.017040   0.003097  -5.501 4.87e-08 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.555 on 935 degrees of freedom
+## Multiple R-squared:  0.03135,    Adjusted R-squared:  0.03032 
+## F-statistic: 30.27 on 1 and 935 DF,  p-value: 4.865e-08
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(model3)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-13-2.pdf}
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-13-3.pdf}
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-13-4.pdf}
+\includegraphics{Project-1_files/figure-latex/unnamed-chunk-13-5.pdf}
+
+\textbf{Analysis}: The Box Cox transformation definitely helped. The Q-Q
+plot has improved, and so has the residuals-levarage graph.There is
+certainly a relationship between \%of people submitting ACT scores, and
+the ACT scores of that cohort. Going forward we would like to
+investigate the interaction effect of different SAT Subjects. We would
+also like to label encode the differnt amount of test preparation, and
+observe the subsequent changes in a model that accounts for more
+variables,without multicollinearity within eaither of them.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \end{document}

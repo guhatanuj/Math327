@@ -1,0 +1,149 @@
+---
+title: "Chap3 HW"
+author: "Tanuj Guha"
+date: "2023-04-03"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(tidyverse)
+library(tidyverse)
+library(ggplot2)
+library(sjPlot)
+library(MASS)
+library(dplyr)
+```
+
+##Question 3.26
+
+Loading the dataset. 
+```{r}
+tadpole = read.csv("Tadpoles.csv")
+summary(tadpole)
+```
+
+3.26.a
+
+```{r}
+x <- tadpole$Body
+y <- tadpole$GutLength
+
+plot(x, y, col=as.factor(tadpole$Treatment),
+     xlab = "Body", ylab = "Gut Length",
+     pch = 19, frame = FALSE)
+abline(lm(y ~ x, data = tadpole), col = "blue")
+```
+
+3.26.b
+
+```{r}
+m = lm(GutLength ~ Body, data = tadpole)
+summary(m)
+```
+Here we see that the R^2 value is ~0.41. Hence there is no strong linear relationship between GutLength and Body. 
+
+3.26.c 
+
+```{r}
+m1 = lm(GutLength ~ Body + Treatment, data = tadpole)
+summary(m1)
+plot(m1)
+```
+
+3.26.d
+
+```{r}
+m2 = lm(GutLength ~ Body + Treatment + MouthpartDamage, data = tadpole)
+summary(m1)
+plot(m1)
+```
+
+##Interpretation 3.26:
+In this case there is not much discernible difference in r^2 values between the models. Residuals V Fitted plots for both these models appear as 'clouds' and as such do not seem to indicate the necessity for further action. <br>
+Q-Q Plot looks better with the model that does include MouthpartDamage, which indicates that the residuals of the Model 'm2' follow the normal distribution 'better' than m1. 
+---
+##Question 3.32
+
+Loading the dataset. 
+```{r}
+speed = read.csv("Speed.csv")
+summary(speed)
+```
+
+3.32.a
+
+```{r}
+m3 = lm(FatalityRate ~ Year, data = speed)
+summary(m3)
+```
+
+The least squares slope is -0.044870 fatalities per 100 / year.
+
+3.32.b
+
+```{r}
+plot(m3)
+```
+
+The resualds do not follow a random distribution. 
+
+3.32.c 
+
+```{r}
+m4 = lm(FatalityRate ~ Year + StateControl + Year*StateControl, data = speed)
+summary(m4)
+```
+
+
+```{r}
+plot(speed$Year, speed$FatalityRate, col=as.factor(speed$StateControl),
+     xlab = "Year", ylab = "Fatality Rate",
+     pch = 19, frame = FALSE)
+abline(lm(speed$FatalityRate ~ speed$Year, data = speed), col = "red")
+```
+
+We can see that the variable StateControl changed in 1995. There is significant change in the relationship between fatality rate and year starting in 1995
+
+3.32.d
+
+```{r}
+speedOld = subset(speed , speed$Year < 1995, select = c(FatalityRate, Year))
+speedNew = subset(speed , speed$Year > 1994, select = c(FatalityRate, Year))
+m5 = lm(FatalityRate ~ Year, data = speedOld)
+m6 = lm(FatalityRate ~ Year, data = speedNew)
+coef(m5)
+coef(m6)
+```
+Writing the actual equations, before and after 1995 respectively: 
+
+```{r}
+model_equation <- function(model, ...) {
+  format_args <- list(...)
+  
+  model_coeff <- model$coefficients
+  format_args$x <- abs(model$coefficients)
+  model_coeff_sign <- sign(model_coeff)
+  model_coeff_prefix <- case_when(model_coeff_sign == -1 ~ " - ",
+                                  model_coeff_sign == 1 ~ " + ",
+                                  model_coeff_sign == 0 ~ " + ")
+  model_eqn <- paste(strsplit(as.character(model$call$formula), "~")[[2]], # 'y'
+                     "=",
+                     paste(if_else(model_coeff[1]<0, "- ", ""),
+                           do.call(format, format_args)[1],
+                           paste(model_coeff_prefix[-1],
+                                 do.call(format, format_args)[-1],
+                                 " * ",
+                                 names(model_coeff[-1]),
+                                 sep = "", collapse = ""),
+                           sep = ""))
+  return(model_eqn)
+}
+model_equation(m5, digits = 2)
+model_equation(m6, digits = 2)
+```
+
+Fatality rates decreased faster before 1995. we can say that there is evidence that transferring control of highway speeds to state governments from the federal government had an adverse affect on highway safety. 
+
+---

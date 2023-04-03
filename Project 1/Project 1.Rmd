@@ -6,9 +6,12 @@ output:
   word_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
-_ # Abstract #_: In this project we are going to investigate the relationship between ACT scores, and several other factors that affect an individual's college admissions. The intention of this project is to estimate how much of the ACT scores of admitted students can be explained by other factors such as English Proficiency, Tutoring, High School GPA, among other things. 
+# __Abstract__ 
+
+In this project we are going to investigate the relationship between ACT scores, and several other factors that affect an individual's college admissions. The intention of this project is to estimate how much of the ACT scores of admitted students can be explained by other factors such as English Proficiency, Tutoring, High School GPA, among other things. 
 
 Let us dive right into the project, and begin by importing the dataset.
 
@@ -55,22 +58,23 @@ This marks the end of house keeping data cleaning.
 colleges = read_xlsx("colleges.xlsx")
 ```
 
-_ # Introduction # _: 
+__Introduction__: 
 Conceptually speak, the ACT, or any other standardized Test for that matter, is touted as an indicator of a person's mastery of high school matter. This mastery is supposed to be a prerequisite for college coursework to further build upon. However, indicators are can often be misleading, and for an indicator to be robust, it has to be concise while being the _least_ reductive.
 
 
 Specifically, in this project, we are investigating the validity of ACT scores, and looking into factors that might contribute towards a higher score for a cohort of students. These cohorts are broken down in terms freshmen who enrolled in the same college.We expect the ACT scores to follow a normal distribution. WE also recognize that we haven't _exhaustively_ identified all of the factors that determine the ACT scores, hence we expect the residuals to have a normal distribution, when plotted against predicted values. 
 
-_ # Data Collection # _: 
+__Data Collection__: 
 
 This dataset has 7 predictor variables:
-	__ Secondary school GPA (quant)
-	__ Completion of college-preparatory program (category)
-	__ TOEFL (Test of English as a Foreign Language (categorical)
-	__ Enrolled total (quant)
-	__ Percent of first-time degree/certificate-seeking students submitting ACT scores (quant)
-	__ SAT Evidence-Based Reading and Writing 75th percentile score) (quant)
-	__ SAT Math 75th percentile score (quant)
+
+__ Secondary school GPA (quant)
+__ Completion of college-preparatory program (category)
+__ TOEFL (Test of English as a Foreign Language (categorical)
+__ Enrolled total (quant)
+__ Percent of first-time degree/certificate-seeking students submitting ACT scores (quant)
+__ SAT Evidence-Based Reading and Writing 75th percentile score) (quant)
+__ SAT Math 75th percentile score (quant)
 
 Each of these predictor variables explain, in some part, the 75th Percentile ACT scores of incoming students in a given college. For the sake of privacy, the colleges have been anonymized and are represented by proxies under column 'ID'.
 
@@ -108,7 +112,7 @@ Visually, there seems to be a pretty strong corrleation between (75th percentile
 
 Of the predictor variables in the _colleges_ dataset, we feel GPA and TOEFL should have been numerical. In the current case they are binned variables, describing the qualitative attributes _about_ the test takes, over the actual representation of scores themselves. We also feel CollegePrep should have been binary. 
 
-_ # Results # _: Let us do a simple linear regression. Let us predict the 75th Percentile of ACT scores, for a given cohort, by looking at what percentage of that cohort decide to submit scores.
+__Results__: Let us do a simple linear regression. Let us predict the 75th Percentile of ACT scores, for a given cohort, by looking at what percentage of that cohort decide to submit scores.
 
 
 ```{r}
@@ -158,4 +162,11 @@ plot(model3)
 ```
 
 
-_ # Analysis # _: The Box Cox transformation definitely helped. The Q-Q plot has improved, and so has the residuals-levarage graph.There is certainly a relationship between %of people submitting ACT scores, and the ACT scores of that cohort. Going forward we would like to investigate the interaction effect of different SAT Subjects. We would also like to label encode the differnt amount of test preparation, and observe the subsequent changes in a model that accounts for more variables,without multicollinearity within eaither of them. 
+__Analysis__: The Box Cox transformation definitely helped. The Q-Q plot has improved, and so has the residuals-levarage graph.There is certainly a relationship between %of people submitting ACT scores, and the ACT scores of that cohort. Going forward we would like to investigate the interaction effect of different SAT Subjects. We would also like to label encode the differnt amount of test preparation, and observe the subsequent changes in a model that accounts for more variables,without multicollinearity within eaither of them.
+
+___ 
+
+
+lamba value print
+manual backward elimination
+everything is significant

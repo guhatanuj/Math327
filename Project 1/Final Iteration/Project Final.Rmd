@@ -2,117 +2,342 @@
 title: "Scores and Admissions"
 author: "Mbonisi and Rick"
 date: "`r Sys.Date()`"
-output: slidy_presentation
+output:
+  word_document:
+    toc: yes
 ---
 
-## Data Aquisition
+# Abstract
+
+In this project we are going to investigate the relationship between ACT scores, and several other factors that affect an individual’s college admissions. The intention of this project is to estimate how much of the ACT scores of admitted students can be explained by other factors such as English Proficiency, Tutoring, High School GPA, among other things.
+
+# Introduction
+
+Conceptually speaking, the ACT, or any other standardized test for that matter, is touted as an indicator of a person’s mastery of high school material. This mastery is supposed to be a prerequisite for college coursework to build upon. However, indicators can often be misleading, and for an indicator to be robust, it has to be concise while being the least reductive. Specifically, in this project, we are investigating the validity of ACT scores and looking into factors that might contribute to a higher score for a cohort of students. These cohorts are freshmen who enrolled in the same college. We expect the ACT scores to follow a normal distribution. We also recognize that we haven't exhaustively identified all of the factors that determine ACT scores. Hence, we expect the residuals to have a normal distribution when plotted against predicted values.
+
+# Data Collection
+
+Here we begin the data collection. 
+
 ```{r setup, warning = FALSE, message = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(readxl)
 library(xlsx)
 library(datadictionary)
+library(olsrr)
+library (tidyr)
+library (ggplot2)
+library(Hmisc)
+library(MASS)
+library(dplyr)
+```
+
+```{r warning = FALSE, message = FALSE}
 colleges = read_xlsx("colleges.xlsx", sheet=1)
 ```
-This marks the end of house keeping data cleaning. 
 
-## Data Cleaning
-We know that 'NumberEnrolled’ is skewed. 
+This marks the end of house keeping data acquisition.
+This dataset has 7 predictor variables.
+
+### The predictor variables :
+* **GPA** (quant) 75th percentile secondary school GPA of the cohort
+* **TOEFL** (categorical) Categories signifying English Proficiency scores requirement from the college, ordered from the most lax to strictest requirements.
+* **CollegePrep** (category) Completion of college-preparatory program
+* **NumberEnrolled** (quant) The total number of students who enrolled in a college from that cohort
+* **ACTPercentage** (quant) Percent of first-time degree/certificate-seeking students submitting ACT scores
+* **SATWR** (quant) 75th percentile SAT Reading-Writing Score of the cohort 
+* **SATM** (quant) 75th percentile SAT Mathematics Score of the cohort 
+
+
+Each of these predictor variables explain, in some part, **ACT**, which is the 75th Percentile ACT scores of incoming students in a given college. **ACT** is the dependent variable. For the sake of privacy, the colleges have been anonymized and are represented by proxies under column **ID**.
+
 ```{r}
-hist(colleges$NumberEnrolled)
+hist.data.frame(colleges)
 ```
+
+We know that variables **NumberEnrolled** and **ACTPercentage** are skewed, as seen above. 
 
 ```{r}
 colleges$logEnrolled <- (log(colleges$NumberEnrolled))
+colleges$logACTPercentage <- (log(colleges$ACTPercentage))
+par (mfrow=c(2,2))
+hist(colleges$NumberEnrolled)
 hist(colleges$logEnrolled)
+hist(colleges$ACTPercentage)
+hist(colleges$logACTPercentage)
 ```
 
-## First order model
+Therefore we did log transformation.
+Since the skew in **ACTPercentage** is not as dramatic as **NumberEnrolled**, therefore, we will drop the **logACTPercentage**
+
+```{r}
+colleges = dplyr::select(colleges, -logACTPercentage)
+```
+
+Now, let us do a scatter plot matrix for a visual view of correlations among the variables. 
+
+```{r}
+numerical = cbind(ACT = colleges$ACT, logEnrolled = colleges$logEnrolled, ACTPercentage = colleges$ACTPercentage, SATM = colleges$SATM, SATWR = colleges$SATWR)
+pairs(numerical)
+
+```
+
+Multiple variable appear to be correlated to each other. Of the predictor variables in the colleges dataset, we feel **GPA** and **TOEFL** should have been numerical. In the current case they are binned variables, describing the qualitative attributes about the test takes, over the actual representation of scores themselves. We also feel **CollegePrep** should have been binary.
+
+# First order model
+
+Here we begin the first order model. 
+
 ```{r}
 model1 = lm(colleges$ACT ~ colleges$logEnrolled + colleges$ACTPercentage + colleges$SATWR + colleges$SATM + colleges$GPA + colleges$CollegePrep + colleges$TOEFL)
 summary(model1)
 ```
-## First Order Model Summary
-a) Significant predictors: logEnrolled, ACTPercentage, SATWR and SATM.
-b) There SAT scores (dis aggregated by subjects) and the percentage of students who choose to submit their ACT scores.
-```{r}
-numerical = cbind(ACT = colleges$ACT, logEnrolled = colleges$logEnrolled, ACTPercentage = colleges$ACTPercentage, SATM = colleges$SATM, SATWR = colleges$SATWR)
-pairs(numerical)
-```
 
-## First Order Model Continued
+### First Order Model Summary
+
+* The significant predictors are: logEnrolled, ACTPercentage, SATWR and SATM.
+* The SAT scores (dis-aggregated by subjects) and the percentage of students who choose to submit their ACT scores appear to be correlated. This aligns with expectations that students with better scores usually choose to submit their scores.
+* There is no evidence of curvature in the residuals. 
+* The residual variance appears constant.
+* Appropriate Cook's Distance for all entries (no outliers), according to the Std. Residuals / Leverage graph.  
+
+### First Order Model Visualization
+
+Visualization of first order model.
+
 ```{r}
+par (mfrow=c(2,2))
 plot(model1)
 ```
-Resid / Fitted Plot shows no concerning curvature.
-Cook's Distance none greater than 0.5 
 
-## Box Cox
+### Box-Cox Analysis
+
+Finding Lambda Value:
+
 ```{r}
-library(MASS)
 bc = boxcox(model1)
 lambda = bc$x[which.max(bc$y)]
 cat(lambda)
 ```
 
-## Box Cox Fix
 Since Lambda = 2, therefore we run a quick fix. 
+
 ```{r}
 colleges$ACT = ((colleges$ACT^lambda-1)/lambda)
 model1BC = lm(colleges$ACT ~ colleges$logEnrolled + colleges$ACTPercentage + colleges$SATWR + colleges$SATM + colleges$GPA + colleges$CollegePrep + colleges$TOEFL)
 summary(model1BC)
 ```
+
 Significant predictors: logEnrolled, ACTPercentage, SATWR and SATM, and _now_ GPA!
 
-## Resid Analysis on BC Fix
+### Residual Visualizations after Box-Cox Fix
+
+Applying the 'plot()' function: 
+
 ```{r}
+par (mfrow=c(2,2))
 plot(model1BC)
 ```
-Fat Tailed Q-Q.
 
-## Step-wise
+Of the __significant__ variables, only **ACTPercentage** seems to have a negative slope. 
+
+# Step-wise Regression
+
+Here is the step wise regression on the first order model. 
+
 ```{r}
-st = stepAIC(model1BC, direction="both")
+nrows = model1BC$rank + model1BC$df.residual
+st = stepAIC(model1BC, direction="both", k=log(nrows))
+summary(st)
 ```
-__lm(formula = colleges$ACT ~ colleges$logEnrolled + colleges$ACTPercentage + 
-    colleges$SATWR + colleges$SATM + colleges$GPA)__
+
+**colleges$ACT ~ colleges$ACTPercentage + colleges$SATWR + colleges$SATM**
     
-## Stepwise Model
-Create the Centered Dataset
+# Centered Interaction Effects
+
+First we create the centered dataset. 
+
 ```{r}
-library(dplyr)
 colleges <- colleges %>% mutate_if(is.character, as.numeric)
 CollegesM = colleges %>% 
   mutate_at(.vars = colnames(colleges)[1:11], 
             .funs = list("scaled" = scale))
 ```
 
-Add Interaction terms
+***Notice:*** The Above is an unorthodox, but arguably code-efficient, method of centering a dataset. The final dataset contains both "  __scaled__ " and non scaled version of all the original features. We simply choose the __scaled__ version of numerical variables, and the original versions of categorical variables, when creating our model.
+
+Creating interaction terms from __only the significant variables of the first order model__. 
+
 ```{r}
-modelCen =lm(CollegesM$ACT ~ (CollegesM$logEnrolled_scaled + CollegesM$ACTPercentage_scaled + 
-    CollegesM$SATWR_scaled + CollegesM$SATM_scaled + CollegesM$GPA_scaled)^2)
+modelCen =lm(CollegesM$ACT ~ (CollegesM$ACTPercentage_scaled + 
+    CollegesM$SATWR_scaled + CollegesM$SATM_scaled)^2)
 summary(modelCen)
 ```
 
-## Stepwise to Interaction terms
+# Stepwise regression on centered interaction effects 
+
+Finally, creating a model with the centered variables, and their interaction terms, using a stepwise approach. 
+
 ```{r}
 stInt = stepAIC(modelCen, direction="both")
 summary(stInt)
 ```
 
-## StepWise on Centered 
+# Final Model
+
+The final model is built using the variables chosen by stepwise regression on a set of predictor variables containing centered variables and their corresponding interaction effects. 
+
 ```{r}
-FinalModel = lm(formula = CollegesM$ACT ~ CollegesM$logEnrolled_scaled + CollegesM$ACTPercentage_scaled + 
-    CollegesM$SATWR_scaled + CollegesM$SATM_scaled + CollegesM$GPA_scaled + 
-    CollegesM$logEnrolled_scaled:CollegesM$SATWR_scaled + CollegesM$logEnrolled_scaled:CollegesM$SATM_scaled + 
-    CollegesM$logEnrolled_scaled:CollegesM$GPA_scaled + CollegesM$ACTPercentage_scaled:CollegesM$SATWR_scaled + 
-    CollegesM$SATWR_scaled:CollegesM$SATM_scaled + CollegesM$SATWR_scaled:CollegesM$GPA_scaled + 
-    CollegesM$SATM_scaled:CollegesM$GPA_scaled)
+FinalModel = lm(formula = CollegesM$ACT ~ CollegesM$ACTPercentage_scaled + 
+    CollegesM$SATWR_scaled + CollegesM$SATM_scaled + CollegesM$ACTPercentage_scaled:CollegesM$SATM_scaled + 
+    CollegesM$SATWR_scaled:CollegesM$SATM_scaled)
 summary(FinalModel)
 ```
 
-## Plots of Final Model
+# Analysis of Final Model
+
+### Plots of Final Model
+
+Visualizing the fitted model. 
+
 ```{r}
+par (mfrow=c(2,2))
 plot(FinalModel)
 ```
+
+### Quick Visual Check of Model
+* No homoskedasticity in residual vs fitted graph.(Non constant variance)
+* No curvature effects
+* No obvious outliers
+* The residuals do appear to follow a normal distribution, albeit with fatter tails. 
+
+### Box Plot of residuals 
+
+Visualization of residual distribution. 
+
+```{r}
+ols_plot_resid_box(FinalModel)
+```
+
+### Partial Regression plots
+
+Added variable plots using avPLots:
+
+```{r}
+library(car)
+avPlots(FinalModel)
+```
+
+The strongest positive parameters seem to be SATM and SATWR.
+
+### Response v Fitted plot. 
+
+Visualization with a 0 - 1, intercept slope line.
+
+```{r}
+CollegesM$fit <- predict(FinalModel)
+ggplot(CollegesM) + geom_point(aes(x = fit , y = ACT)) + geom_abline(aes(intercept =0, slope=1, color="red"))
+```
+
+### Variance Inflaction Factors
+
+```{r}
+vif_values <- vif(FinalModel)
+
+barplot(vif_values, main = "VIF Values", horiz = F, col = "steelblue", las = 2, cex.names=0.45, mar =50) + abline(h = 5, col = "red")
+```
+
+```{r}
+vif_values
+```
+
+Neither of the interaction effects seem to have very high vif values. 
+
+### Leverage Values
+
+We know the formula for high leverage cut off is 3(k+1)/n, where k is the number of features and the n is the number of observations. Our leverage cut off is 0.01921025. 
+
+Finally plotting Standardized Residuals vs Leverage, with cutoff in the Leverage axis.
+
+```{r}
+levg.cutoff = 3*FinalModel$rank / nrows
+plot(FinalModel, which = 5) + abline(v=0.02241195304, col="blue")
+```
+
+```{r}
+hatvals = hatvalues (FinalModel) > levg.cutoff
+sum (hatvals)
+sum (hatvals) / nrows
+```
+
+We expect ~5% of the rows, to be above the leverage cutoff, and in our case it is ~3%, so no points need to be eliminated. 
+
+```{r}
+summary (cooks.distance(FinalModel))
+```
+
+There are also no Cook's Distance values above the 0.5 cutoff.
+
+```{r}
+plot (CollegesM [,c("SATWR_scaled", "SATM_scaled", "ACTPercentage_scaled")], 
+      col= (hatvals > levg.cutoff) + 1, cex=ifelse (1:nrows==11, 2.5, 1), 
+      pch=ifelse (1:nrows==190, 20, 1))
+```
+
+The plot above shows that the high leverage values (red points) appear mostly around the edges of the two-dimensional scatter plots.
+
+Given the analysis above, no further remedial measures are needed.
+
+### Interaction Plots
+
+Our model included various interaction affects. 
+Let us visualize them here. 
+
+```{r fig.width=5, fig.height=4}
+par (mfrow=c(1,2))
+
+categorize = function (x) {
+  quartiles = summary (x) [c(2, 3, 5)]
+  result = rep ("Q1", length (x))
+  result [(quartiles[1] < x) & (x <= quartiles [2])] = "Q2"
+  result [(quartiles[2] < x) & (x <= quartiles [3])] = "Q3"
+  result [quartiles[3] < x] = "Q4"
+  return (result)
+}
+
+with (CollegesM,
+      qplot (x=SATWR_scaled, y=ACT, color=categorize(SATM_scaled)) +
+        geom_smooth (method="lm"))
+
+with (CollegesM,
+      qplot (x=ACTPercentage_scaled, y=ACT, color=categorize(SATM_scaled)) +
+        geom_smooth (method="lm"))
+```
+
+There are two significant interactions: ACTPercentage_scaled:SATM_scaled, and SATWR_scaled:SATM_scaled. We see that generally speaking, in groups of students with lower ACT score submission rates, we can expect lower ACT scores. **However**, this relationship does not hold true when ACT scores in a group are generally higher. 
+
+### Example Predictions
+
+```{r}
+preds = predict (FinalModel, interval='prediction')
+CollegesM$pred.ACT = exp (preds [,1])
+CollegesM$pred.lower = exp (preds [,2])
+CollegesM$pred.upper = exp (preds [,3])
+```
+
+Printing the results for 6 selected cohorts:
+```{r}
+CollegesM [c(57, 451, 25, 357, 72, 730), c("ACT_scaled", "pred.ACT", "pred.lower", "pred.upper")]
+```
+Counting how many observations have prediction intervals that contain the
+observed response value
+
+```{r}
+CollegesM$in.interval = ifelse (CollegesM$pred.lower <= CollegesM$ACT &
+                              CollegesM$ACT_scaled <= CollegesM$pred.upper,
+                              1, 0)
+mean (CollegesM$in.interval)
+```
+
 

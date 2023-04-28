@@ -1,0 +1,118 @@
+---
+title: "Scores and Admissions"
+author: "Mbonisi and Rick"
+date: "`r Sys.Date()`"
+output: slidy_presentation
+---
+
+## Data Aquisition
+```{r setup, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+library(xlsx)
+library(datadictionary)
+colleges = read_xlsx("colleges.xlsx", sheet=1)
+```
+This marks the end of house keeping data cleaning. 
+
+## Data Cleaning
+We know that 'NumberEnrolled’ is skewed. 
+```{r}
+hist(colleges$NumberEnrolled)
+```
+
+```{r}
+colleges$logEnrolled <- (log(colleges$NumberEnrolled))
+hist(colleges$logEnrolled)
+```
+
+## First order model
+```{r}
+model1 = lm(colleges$ACT ~ colleges$logEnrolled + colleges$ACTPercentage + colleges$SATWR + colleges$SATM + colleges$GPA + colleges$CollegePrep + colleges$TOEFL)
+summary(model1)
+```
+## First Order Model Summary
+a) Significant predictors: logEnrolled, ACTPercentage, SATWR and SATM.
+b) There SAT scores (dis aggregated by subjects) and the percentage of students who choose to submit their ACT scores.
+```{r}
+numerical = cbind(ACT = colleges$ACT, logEnrolled = colleges$logEnrolled, ACTPercentage = colleges$ACTPercentage, SATM = colleges$SATM, SATWR = colleges$SATWR)
+pairs(numerical)
+```
+
+## First Order Model Continued
+```{r}
+plot(model1)
+```
+Resid / Fitted Plot shows no concerning curvature.
+Cook's Distance none greater than 0.5 
+
+## Box Cox
+```{r}
+library(MASS)
+bc = boxcox(model1)
+lambda = bc$x[which.max(bc$y)]
+cat(lambda)
+```
+
+## Box Cox Fix
+Since Lambda = 2, therefore we run a quick fix. 
+```{r}
+colleges$ACT = ((colleges$ACT^lambda-1)/lambda)
+model1BC = lm(colleges$ACT ~ colleges$logEnrolled + colleges$ACTPercentage + colleges$SATWR + colleges$SATM + colleges$GPA + colleges$CollegePrep + colleges$TOEFL)
+summary(model1BC)
+```
+Significant predictors: logEnrolled, ACTPercentage, SATWR and SATM, and _now_ GPA!
+
+## Resid Analysis on BC Fix
+```{r}
+plot(model1BC)
+```
+Fat Tailed Q-Q.
+
+## Step-wise
+```{r}
+st = stepAIC(model1BC, direction="both")
+```
+__lm(formula = colleges$ACT ~ colleges$logEnrolled + colleges$ACTPercentage + 
+    colleges$SATWR + colleges$SATM + colleges$GPA)__
+    
+## Stepwise Model
+Create the Centered Dataset
+```{r}
+library(dplyr)
+colleges <- colleges %>% mutate_if(is.character, as.numeric)
+CollegesM = colleges %>% 
+  mutate_at(.vars = colnames(colleges)[1:11], 
+            .funs = list("scaled" = scale))
+```
+
+Add Interaction terms
+```{r}
+modelCen =lm(CollegesM$ACT ~ (CollegesM$logEnrolled_scaled + CollegesM$ACTPercentage_scaled + 
+    CollegesM$SATWR_scaled + CollegesM$SATM_scaled + CollegesM$GPA_scaled)^2)
+summary(modelCen)
+```
+
+## Stepwise to Interaction terms
+```{r}
+stInt = stepAIC(modelCen, direction="both")
+summary(stInt)
+```
+
+## StepWise on Centered 
+```{r}
+FinalModel = lm(formula = CollegesM$ACT ~ CollegesM$logEnrolled_scaled + CollegesM$ACTPercentage_scaled + 
+    CollegesM$SATWR_scaled + CollegesM$SATM_scaled + CollegesM$GPA_scaled + 
+    CollegesM$logEnrolled_scaled:CollegesM$SATWR_scaled + CollegesM$logEnrolled_scaled:CollegesM$SATM_scaled + 
+    CollegesM$logEnrolled_scaled:CollegesM$GPA_scaled + CollegesM$ACTPercentage_scaled:CollegesM$SATWR_scaled + 
+    CollegesM$SATWR_scaled:CollegesM$SATM_scaled + CollegesM$SATWR_scaled:CollegesM$GPA_scaled + 
+    CollegesM$SATM_scaled:CollegesM$GPA_scaled)
+summary(FinalModel)
+```
+
+## Plots of Final Model
+```{r}
+plot(FinalModel)
+```
+

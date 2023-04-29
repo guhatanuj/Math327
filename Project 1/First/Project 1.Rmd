@@ -8,7 +8,7 @@ output:
     df_print: paged
   pdf_document: default
 ---
-
+"CollegesM$ACTPercentage_scaled", "CollegesM$SATWR_scaled", "CollegesM$SATM_scaled", "CollegesM$GPA_scaled"
 # __Abstract__ 
 
 In this project we are going to investigate the relationship between ACT scores, and several other factors that affect an individual's college admissions. The intention of this project is to estimate how much of the ACT scores of admitted students can be explained by other factors such as English Proficiency, Tutoring, High School GPA, among other things. 

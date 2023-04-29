@@ -1,0 +1,106 @@
+---
+title: "Math 327 Chapter 9 Homework"
+author: "(Your Name Here)"
+date: "January 10, 2021"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library()
+```
+
+## Read and Plot the Data
+
+```{r}
+library (Stat2Data)
+data ("Titanic")
+
+# Remove one row with PClass = *
+
+Titanic = Titanic [!Titanic$PClass=="*",]
+head (Titanic)
+
+plot (Titanic [, 2:5], col=Titanic$Survived*2+1)
+
+Titanic$Died = 1 - Titanic$Survived
+```
+
+Note: It is relatively easier to explain odds ratios for positive effects (positive slopes), so the analyses in this assignment model the odds of not surviving (Died), rather than the odds of surviving.
+
+## Question 1
+
+```{r}
+# Frequency table of Died vs Predictor
+table (Titanic$Died, Titanic$Sex)
+# Logistic fit
+fit1 = glm (Died ~ Sex, data=Titanic, family=binomial)
+summary (fit1)
+# Odds Ratio for Died, Male vs. Female
+exp (fit1$coefficients)
+```
+We know that odds ratio = e ^ (__fitted slope__).
+However we can use R here to extract the odds ratio:
+```{r}
+exp(coef(fit1))
+```
+
+
+## Question 2
+
+```{r}
+# Odds Ratio confidence interval for Died, Male vs. Female
+exp (confint (fit1))
+```
+
+
+
+## Question 3
+
+```{r, fig.height=3.5, fig.width=7.5}
+par (mfrow = c(1,2))
+with (Titanic, boxplot (Age ~ Died, horizontal = T))
+plot (jitter (Died, 0.2) ~ Age, data=Titanic)
+with (Titanic [!is.na (Titanic$Age), ], lines (lowess (Died ~ Age), col='red', lty=2))
+# Logistic fit
+fit2 = glm (Died ~ Age, data=Titanic, family=binomial)
+xseq = seq (0, 75, length=100)
+lines (xseq, predict (fit2, list (Age=xseq)))
+summary (fit2)
+# Odds Ratio for Died
+exp (fit2$coefficients)
+```
+
+
+
+## Question 4
+
+```{r}
+# Odds Ratio confidence interval for Died
+exp (confint (fit2))
+```
+
+
+
+## Question 5
+
+```{r}
+# Frequency table of Died vs Predictor - Ignore the column labelled *
+table (Titanic$Died, Titanic$PClass)
+# Logistic fit
+fit3 = glm (Died ~ PClass, data=Titanic, family=binomial)
+summary (fit3)
+# Odds Ratio for Died, 2nd or 3rd Class vs 1st Class
+exp (fit3$coefficients)
+```
+
+
+
+## Question 6
+
+```{r}
+# Odds Ratio confidence intervals for Died
+exp (confint (fit3))
+```
+
+
